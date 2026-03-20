@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chalak — AI-Powered Last-Mile Transit for India</title>
+  <meta name="description" content="Chalak turns existing auto-rickshaws into a dynamic shared transit network using AI route optimization. No new vehicles. Just smarter infrastructure." />
+
+  <!-- Tailwind CSS v2 pre-built stylesheet — works locally and on GitHub Pages -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & base ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      --brand:       #f97316;   /* orange-500 equivalent */
+      --brand-dark:  #ea580c;   /* orange-600 */
+      --brand-light: #fb923c;   /* orange-400 */
+      --bg-900:      #0a0a0f;
+      --bg-800:      #0f0f1a;
+      --bg-700:      #14141f;
+      --bg-600:      #1a1a2e;
+      --bg-500:      #1e1e35;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg-900);
+      color: #e2e8f0;
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+      /* no ::before noise overlay */
+    }
+
+    .font-display { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+
+    /* ─── Scroll-reveal animations ─────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.65s ease-out, transform 0.65s ease-out;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-left {
+      opacity: 0;
+      transform: translateX(-30px);
+      transition: opacity 0.65s ease-out, transform 0.65s ease-out;
+    }
+    .reveal-left.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .reveal-right {
+      opacity: 0;
+      transform: translateX(30px);
+      transition: opacity 0.65s ease-out, transform 0.65s ease-out;
+    }
+    .reveal-right.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* ─── Float animation for UI card ──────────────── */
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-12px); }
+    }
+    .animate-float { animation: float 6s ease-in-out infinite; }
+
+    /* ─── Glow pulse ────────────────────────────────── */
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.55; }
+      50%       { opacity: 1; }
+    }
+    .animate-glow { animation: glowPulse 3s ease-in-out infinite; }
+
+    /* ─── Metrics ticker ────────────────────────────── */
+    @keyframes ticker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      animation: ticker 30s linear infinite;
+    }
+    .ticker-wrap {
+      overflow: hidden;
+      position: relative;
+    }
+    .ticker-wrap::before,
+    .ticker-wrap::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 80px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .ticker-wrap::before { left: 0;  background: linear-gradient(to right,  var(--bg-800), transparent); }
+    .ticker-wrap::after  { right: 0; background: linear-gradient(to left, var(--bg-800), transparent); }
+
+    /* ─── Surface backgrounds ───────────────────────── */
+    .bg-surface-900 { background-color: var(--bg-900); }
+    .bg-surface-800 { background-color: var(--bg-800); }
+    .bg-surface-700 { background-color: var(--bg-700); }
+    .bg-surface-600 { background-color: var(--bg-600); }
+    .bg-surface-500 { background-color: var(--bg-500); }
+
+    /* ─── Brand color helpers ───────────────────────── */
+    .text-brand    { color: var(--brand); }
+    .bg-brand      { background-color: var(--brand); }
+    .border-brand  { border-color: var(--brand); }
+
+    /* ─── Gradient text ─────────────────────────────── */
+    .gradient-text {
+      background: linear-gradient(135deg, var(--brand-light), var(--brand), var(--brand-dark));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ─── Card / glass styles ───────────────────────── */
+    .card {
+      background-color: var(--bg-700);
+      border: 1px solid rgba(249,115,22,0.12);
+      border-radius: 1rem;
+      padding: 1.75rem;
+    }
+
+    .glass-card {
+      background: rgba(20, 20, 31, 0.85);
+      border: 1px solid rgba(249,115,22,0.2);
+      border-radius: 1.25rem;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* ─── Nav blur ──────────────────────────────────── */
+    .nav-blur {
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(249,115,22,0.1);
+    }
+
+    /* ─── Orange glow rings ─────────────────────────── */
+    .glow-ring {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+
+    /* ─── Section divider ───────────────────────────── */
+    .section-divider {
+      border: none;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(249,115,22,0.3), transparent);
+      margin: 0;
+    }
+
+    /* ─── Button ────────────────────────────────────── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #fff;
+      font-weight: 700;
+      padding: 0.85rem 2rem;
+      border-radius: 9999px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(249,115,22,0.45);
+    }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: transparent;
+      color: var(--brand);
+      font-weight: 700;
+      padding: 0.85rem 2rem;
+      border-radius: 9999px;
+      border: 1.5px solid var(--brand);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      text-decoration: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .btn-outline:hover {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    /* ─── Step circle ───────────────────────────────── */
+    .step-circle {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    /* ─── Team card ─────────────────────────────────── */
+    .team-avatar {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin: 0 auto 1rem;
+      border: 3px solid rgba(249,115,22,0.3);
+    }
+
+    /* ─── Hero image overlay ────────────────────────── */
+    .hero-image-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(10,10,15,0.6) 0%, rgba(10,10,15,0.85) 70%, var(--bg-900) 100%);
+    }
+
+    /* ─── Responsive utility ────────────────────────── */
+    @media (max-width: 768px) {
+      .hide-mobile { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     NAV
+═══════════════════════════════════════════════════════ -->
+<nav class="nav-blur fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-6 flex items-center justify-between" style="height:64px;">
+    <a href="#" class="font-display font-800 text-xl flex items-center gap-2" style="font-weight:800;">
+      <span style="width:28px;height:28px;background:linear-gradient(135deg,#fb923c,#ea580c);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;">⚡</span>
+      <span class="text-white">Chalak</span>
+    </a>
+
+    <div class="hidden md:flex items-center gap-8 text-sm font-medium" style="color:#94a3b8;">
+      <a href="#problem"  class="hover:text-white transition-colors">Problem</a>
+      <a href="#solution" class="hover:text-white transition-colors">Solution</a>
+      <a href="#market"   class="hover:text-white transition-colors">Market</a>
+      <a href="#traction" class="hover:text-white transition-colors">Traction</a>
+      <a href="#team"     class="hover:text-white transition-colors">Team</a>
+    </div>
+
+    <a href="#cta" class="btn-primary" style="padding:0.55rem 1.4rem;font-size:0.875rem;">
+      Request Deck →
+    </a>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════════ -->
+<section style="min-height:100vh;position:relative;display:flex;align-items:center;overflow:hidden;padding-top:64px;">
+  <!-- Background image -->
+  <img
+    src="https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=1600&q=80"
+    alt="India city streets"
+    style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
+  />
+  <div class="hero-image-overlay"></div>
+
+  <!-- Glow rings -->
+  <div class="glow-ring animate-glow" style="width:600px;height:600px;background:rgba(249,115,22,0.12);top:-100px;right:-150px;"></div>
+  <div class="glow-ring animate-glow" style="width:400px;height:400px;background:rgba(249,115,22,0.08);bottom:50px;left:-100px;animation-delay:1.5s;"></div>
+
+  <div class="max-w-7xl mx-auto px-6 py-24 relative z-10 w-full">
+    <div class="grid md:grid-cols-2 gap-16 items-center">
+
+      <!-- Left: copy -->
+      <div class="reveal">
+        <div style="display:inline-flex;align-items:center;gap:0.5rem;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);border-radius:9999px;padding:0.35rem 1rem;margin-bottom:1.5rem;">
+          <span style="width:8px;height:8px;background:#f97316;border-radius:50%;animation:glowPulse 2s ease-in-out infinite;"></span>
+          <span class="text-sm font-semibold" style="color:#fb923c;">Seed Round Open · $2.5M</span>
+        </div>
+
+        <h1 class="font-display leading-tight" style="font-size:clamp(2.4rem,5vw,4rem);font-weight:800;color:#fff;margin-bottom:1.25rem;">
+          India's 15 Million<br/>
+          Auto-Rickshaws,<br/>
+          <span class="gradient-text">Finally Networked.</span>
+        </h1>
+
+        <p style="font-size:1.125rem;color:#94a3b8;max-width:500px;line-height:1.75;margin-bottom:2.5rem;">
+          Chalak uses AI to turn existing autos into a real-time shared transit layer — fixed fares, smart pooling, zero new vehicles. Last-mile from every metro station, solved.
+        </p>
+
+        <div style="display:flex;flex-wrap:wrap;gap:1rem;">
+          <a href="#cta" class="btn-primary" style="font-size:1rem;">
+            Get the Investor Deck →
+          </a>
+          <a href="#solution" class="btn-outline" style="font-size:1rem;">
+            See How It Works
+          </a>
+        </div>
+
+        <!-- Social proof -->
+        <div style="margin-top:2.5rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:2.5rem;flex-wrap:wrap;">
+          <div>
+            <div class="font-display text-2xl font-bold" style="color:#f97316;font-weight:800;">12,000+</div>
+            <div class="text-sm" style="color:#64748b;">Rides completed</div>
+          </div>
+          <div>
+            <div class="font-display text-2xl font-bold" style="color:#f97316;font-weight:800;">3 Cities</div>
+            <div class="text-sm" style="color:#64748b;">Live pilots</div>
+          </div>
+          <div>
+            <div class="font-display text-2xl font-bold" style="color:#f97316;font-weight:800;">850+</div>
+            <div class="text-sm" style="color:#64748b;">Active drivers</div>
+          </div>
+          <div>
+            <div class="font-display text-2xl font-bold" style="color:#f97316;font-weight:800;">4.7 ★</div>
+            <div class="text-sm" style="color:#64748b;">Avg. rider rating</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: floating UI card -->
+      <div class="reveal-right hide-mobile" style="display:flex;justify-content:center;">
+        <div class="glass-card animate-float" style="width:320px;padding:1.5rem;position:relative;">
+          <!-- Map placeholder -->
+          <div style="width:100%;height:160px;border-radius:0.75rem;overflow:hidden;margin-bottom:1.25rem;position:relative;">
+            <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=640&q=80" alt="City map" style="width:100%;height:100%;object-fit:cover;" />
+            <div style="position:absolute;inset:0;background:rgba(10,10,15,0.45);"></div>
+            <!-- Route dots -->
+            <div style="position:absolute;top:30px;left:50px;width:10px;height:10px;background:#f97316;border-radius:50%;border:2px solid #fff;"></div>
+            <div style="position:absolute;top:55px;left:95px;width:10px;height:10px;background:#f97316;border-radius:50%;border:2px solid #fff;"></div>
+            <div style="position:absolute;top:80px;left:140px;width:10px;height:10px;background:#f97316;border-radius:50%;border:2px solid #fff;"></div>
+            <div style="position:absolute;top:105px;left:190px;width:12px;height:12px;background:#22c55e;border-radius:50%;border:2px solid #fff;"></div>
+            <div style="position:absolute;top:28px;left:48px;width:154px;height:79px;border-top:2px dashed rgba(249,115,22,0.6);border-right:2px dashed rgba(249,115,22,0.6);border-radius:0 12px 0 0;"></div>
+          </div>
+
+          <!-- Ride info -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <div>
+              <div class="text-xs font-semibold" style="color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Booking Now</div>
+              <div class="font-display text-base font-bold text-white" style="font-weight:700;">Koramangala → MG Road Metro</div>
+            </div>
+            <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);border-radius:9999px;padding:0.2rem 0.65rem;font-size:0.75rem;color:#22c55e;font-weight:600;">Shared</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+            <div style="background:rgba(249,115,22,0.1);border-radius:0.5rem;padding:0.6rem;text-align:center;">
+              <div class="text-xs" style="color:#64748b;">Fare</div>
+              <div class="font-bold text-white" style="font-size:1rem;font-weight:700;">₹29</div>
+            </div>
+            <div style="background:rgba(249,115,22,0.1);border-radius:0.5rem;padding:0.6rem;text-align:center;">
+              <div class="text-xs" style="color:#64748b;">ETA</div>
+              <div class="font-bold text-white" style="font-size:1rem;font-weight:700;">4 min</div>
+            </div>
+            <div style="background:rgba(249,115,22,0.1);border-radius:0.5rem;padding:0.6rem;text-align:center;">
+              <div class="text-xs" style="color:#64748b;">Co-riders</div>
+              <div class="font-bold text-white" style="font-size:1rem;font-weight:700;">2</div>
+            </div>
+          </div>
+
+          <!-- Driver row -->
+          <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:rgba(255,255,255,0.04);border-radius:0.75rem;">
+            <div style="width:38px;height:38px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">🛺</div>
+            <div style="flex:1;">
+              <div class="text-sm font-semibold text-white">Ravi Kumar</div>
+              <div class="text-xs" style="color:#64748b;">KA-01-AB-1234 · 4.9 ★</div>
+            </div>
+            <button style="background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:0.5rem;padding:0.4rem 0.85rem;font-size:0.8rem;font-weight:700;cursor:pointer;">Book</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     METRICS TICKER
+═══════════════════════════════════════════════════════ -->
+<section style="background-color:var(--bg-800);padding:1.25rem 0;border-top:1px solid rgba(249,115,22,0.1);border-bottom:1px solid rgba(249,115,22,0.1);">
+  <div class="ticker-wrap">
+    <div class="ticker-track">
+      <!-- Two identical sets for seamless loop -->
+      <div style="display:flex;align-items:center;gap:0;">
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#f97316;">🛺 12,000+ Rides Completed</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#94a3b8;">🏙️ 3 Cities: Bangalore · Delhi · Mumbai</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#f97316;">👨‍✈️ 850+ Active Drivers Onboarded</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#94a3b8;">⭐ 4.7 Average Rider Rating</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#f97316;">📉 42% Lower Fare vs. Solo Auto</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#94a3b8;">🔄 91% On-Time Arrival Rate</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#f97316;">💼 Seed Round: $2.5M · Open Now</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+      </div>
+      <!-- Duplicate for seamless scroll -->
+      <div style="display:flex;align-items:center;gap:0;" aria-hidden="true">
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#f97316;">🛺 12,000+ Rides Completed</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#94a3b8;">🏙️ 3 Cities: Bangalore · Delhi · Mumbai</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#f97316;">👨‍✈️ 850+ Active Drivers Onboarded</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#94a3b8;">⭐ 4.7 Average Rider Rating</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#f97316;">📉 42% Lower Fare vs. Solo Auto</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#94a3b8;">🔄 91% On-Time Arrival Rate</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+        <span class="ticker-item" style="padding:0 2.5rem;white-space:nowrap;font-size:0.875rem;font-weight:600;color:#f97316;">💼 Seed Round: $2.5M · Open Now</span>
+        <span style="color:rgba(249,115,22,0.3);">|</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PROBLEM
+═══════════════════════════════════════════════════════ -->
+<section id="problem" style="background-color:var(--bg-900);padding:6rem 0;">
+  <div class="max-w-7xl mx-auto px-6">
+
+    <div class="text-center reveal" style="margin-bottom:3.5rem;">
+      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:9999px;padding:0.3rem 1rem;margin-bottom:1rem;">
+        <span class="text-sm font-semibold text-brand">The Problem</span>
+      </div>
+      <h2 class="font-display text-4xl font-bold text-white" style="font-weight:800;margin-bottom:1rem;">
+        India's Last Mile Is Broken
+      </h2>
+      <p style="color:#94a3b8;font-size:1.125rem;max-width:560px;margin:0 auto;">
+        Metro networks expand. But the final 3km gap between station and home remains chaotic, expensive, and unreliable.
+      </p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.5rem;">
+
+      <div class="card reveal" style="transition-delay:0.1s;">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">🚧</div>
+        <h3 class="font-display font-bold text-white text-xl" style="margin-bottom:0.5rem;">No Fixed Routes</h3>
+        <p style="color:#64748b;line-height:1.7;">Auto-rickshaws operate on ad-hoc negotiations. Riders have zero predictability on fare, time, or availability.</p>
+      </div>
+
+      <div class="card reveal" style="transition-delay:0.2s;">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">💸</div>
+        <h3 class="font-display font-bold text-white text-xl" style="margin-bottom:0.5rem;">Price Gouging</h3>
+        <p style="color:#64748b;line-height:1.7;">Peak-hour surge pricing up to 3x is routine. Low-income daily commuters pay a disproportionate share of their income.</p>
+      </div>
+
+      <div class="card reveal" style="transition-delay:0.3s;">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">🌫️</div>
+        <h3 class="font-display font-bold text-white text-xl" style="margin-bottom:0.5rem;">Dead Miles &amp; Pollution</h3>
+        <p style="color:#64748b;line-height:1.7;">60% of auto trips carry a single passenger. This empty deadhead traffic clogs roads and emits carbon unnecessarily.</p>
+      </div>
+
+      <div class="card reveal" style="transition-delay:0.4s;">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">📱</div>
+        <h3 class="font-display font-bold text-white text-xl" style="margin-bottom:0.5rem;">Fragmented Supply</h3>
+        <p style="color:#64748b;line-height:1.7;">15 million autos nationwide have no coordination layer. Each driver operates as an isolated unit with no network benefit.</p>
+      </div>
+
+    </div>
+
+    <!-- Big stat -->
+    <div class="reveal" style="margin-top:3rem;padding:2.5rem;border-radius:1.25rem;background:linear-gradient(135deg,rgba(249,115,22,0.08),rgba(234,88,12,0.04));border:1px solid rgba(249,115,22,0.15);text-align:center;">
+      <div class="font-display text-5xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.5rem;">$8.3B</div>
+      <div style="color:#94a3b8;font-size:1.125rem;">annual consumer surplus lost to last-mile inefficiency in India's top 10 cities</div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SOLUTION
+═══════════════════════════════════════════════════════ -->
+<section id="solution" style="background-color:var(--bg-800);padding:6rem 0;">
+  <div class="max-w-7xl mx-auto px-6">
+
+    <div class="text-center reveal" style="margin-bottom:3.5rem;">
+      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:9999px;padding:0.3rem 1rem;margin-bottom:1rem;">
+        <span class="text-sm font-semibold text-brand">The Solution</span>
+      </div>
+      <h2 class="font-display text-4xl font-bold text-white" style="font-weight:800;margin-bottom:1rem;">
+        AI-Optimized Shared Auto Network
+      </h2>
+      <p style="color:#94a3b8;font-size:1.125rem;max-width:580px;margin:0 auto;">
+        Chalak turns every willing auto driver into a node in an intelligent transit network — without buying a single new vehicle.
+      </p>
+    </div>
+
+    <div style="display:grid;md:grid-cols-2;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:4rem;align-items:center;">
+
+      <!-- Feature list -->
+      <div>
+        <div class="reveal" style="display:flex;gap:1rem;margin-bottom:2rem;">
+          <div style="width:2.75rem;height:2.75rem;background:rgba(249,115,22,0.15);border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">🤖</div>
+          <div>
+            <h3 class="font-display font-bold text-white text-lg" style="margin-bottom:0.25rem;">Real-Time Route Optimization</h3>
+            <p style="color:#64748b;line-height:1.65;">Our AI engine clusters riders heading the same direction and routes drivers dynamically — maximizing seat utilization to 80%+.</p>
+          </div>
+        </div>
+
+        <div class="reveal" style="display:flex;gap:1rem;margin-bottom:2rem;transition-delay:0.1s;">
+          <div style="width:2.75rem;height:2.75rem;background:rgba(249,115,22,0.15);border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">📍</div>
+          <div>
+            <h3 class="font-display font-bold text-white text-lg" style="margin-bottom:0.25rem;">Fixed Fare Transparency</h3>
+            <p style="color:#64748b;line-height:1.65;">Riders see the fare before booking. No surge, no negotiation. Prices are 35–50% lower than solo auto — and always consistent.</p>
+          </div>
+        </div>
+
+        <div class="reveal" style="display:flex;gap:1rem;margin-bottom:2rem;transition-delay:0.2s;">
+          <div style="width:2.75rem;height:2.75rem;background:rgba(249,115,22,0.15);border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">🗺️</div>
+          <div>
+            <h3 class="font-display font-bold text-white text-lg" style="margin-bottom:0.25rem;">Metro-Station Anchoring</h3>
+            <p style="color:#64748b;line-height:1.65;">Routes radiate from metro and bus terminuses. Chalak completes the first/last mile that public transit cannot — seamlessly.</p>
+          </div>
+        </div>
+
+        <div class="reveal" style="display:flex;gap:1rem;transition-delay:0.3s;">
+          <div style="width:2.75rem;height:2.75rem;background:rgba(249,115,22,0.15);border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">📲</div>
+          <div>
+            <h3 class="font-display font-bold text-white text-lg" style="margin-bottom:0.25rem;">Driver-First Design</h3>
+            <p style="color:#64748b;line-height:1.65;">Lightweight driver app works on entry-level Android. Earnings up 28% per driver without extra hours — stronger supply flywheel.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating card (solution) -->
+      <div class="reveal-right" style="display:flex;justify-content:center;">
+        <div style="position:relative;">
+          <!-- Glow -->
+          <div style="position:absolute;inset:-20px;background:rgba(249,115,22,0.1);border-radius:2rem;filter:blur(40px);"></div>
+
+          <div class="glass-card animate-float" style="width:300px;padding:1.5rem;position:relative;z-index:1;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1.25rem;">
+              <span style="width:24px;height:24px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;">⚡</span>
+              <span class="font-display font-bold text-white" style="font-size:0.95rem;font-weight:700;">Chalak Network</span>
+            </div>
+
+            <!-- Route visualization -->
+            <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.15);border-radius:0.75rem;padding:1rem;margin-bottom:1rem;">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+                <div style="width:8px;height:8px;background:#f97316;border-radius:50%;"></div>
+                <span class="text-sm text-white" style="font-weight:500;">Indiranagar Metro</span>
+              </div>
+              <div style="border-left:2px dashed rgba(249,115,22,0.4);height:32px;margin-left:3px;margin-bottom:0.5rem;position:relative;">
+                <span style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);font-size:0.7rem;color:#64748b;">3.2 km · 8 min</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem;">
+                <div style="width:8px;height:8px;background:#22c55e;border-radius:50%;"></div>
+                <span class="text-sm text-white" style="font-weight:500;">HSR Layout Sec 5</span>
+              </div>
+            </div>
+
+            <!-- Co-riders -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+              <div style="display:flex;gap:-6px;">
+                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f46e5);border:2px solid var(--bg-700);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#fff;font-weight:700;">P</div>
+                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#be185d);border:2px solid var(--bg-700);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#fff;font-weight:700;margin-left:-8px;">A</div>
+                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ea580c);border:2px solid var(--bg-700);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#fff;font-weight:700;margin-left:-8px;">R</div>
+              </div>
+              <div style="font-size:0.75rem;color:#64748b;">3 co-riders sharing</div>
+            </div>
+
+            <!-- Price breakdown -->
+            <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:0.75rem;padding:0.75rem;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;">
+                <span class="text-sm" style="color:#64748b;">Solo auto would cost</span>
+                <span class="text-sm" style="color:#94a3b8;text-decoration:line-through;">₹85</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-sm font-semibold" style="color:#22c55e;">Your Chalak fare</span>
+                <span class="text-lg font-bold" style="color:#22c55e;font-weight:800;">₹29</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+
+<!-- ═══════════════════════════════════════════════════════
+     HOW IT WORKS
+═══════════════════════════════════════════════════════ -->
+<section id="how" style="background-color:var(--bg-900);padding:6rem 0;">
+  <div class="max-w-7xl mx-auto px-6">
+
+    <div class="text-center reveal" style="margin-bottom:3.5rem;">
+      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:9999px;padding:0.3rem 1rem;margin-bottom:1rem;">
+        <span class="text-sm font-semibold text-brand">How It Works</span>
+      </div>
+      <h2 class="font-display text-4xl font-bold text-white" style="font-weight:800;">
+        Three Steps to a Smarter Ride
+      </h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;position:relative;">
+
+      <!-- Connector line (desktop only) -->
+      <div style="display:none;" class="hide-mobile"></div>
+
+      <div class="card reveal" style="text-align:center;transition-delay:0.1s;">
+        <div class="step-circle" style="margin:0 auto 1.25rem;">1</div>
+        <h3 class="font-display font-bold text-white text-lg" style="margin-bottom:0.5rem;">Rider Opens App</h3>
+        <p style="color:#64748b;line-height:1.7;">Enters destination. Chalak instantly matches them with riders heading the same way and a nearby driver. Fare shown upfront.</p>
+      </div>
+
+      <div class="card reveal" style="text-align:center;transition-delay:0.2s;">
+        <div class="step-circle" style="margin:0 auto 1.25rem;">2</div>
+        <h3 class="font-display font-bold text-white text-lg" style="margin-bottom:0.5rem;">AI Clusters &amp; Routes</h3>
+        <p style="color:#64748b;line-height:1.7;">Our engine solves the vehicle routing problem in under 400ms — assigning pooled pickups and optimizing the shared route in real time.</p>
+      </div>
+
+      <div class="card reveal" style="text-align:center;transition-delay:0.3s;">
+        <div class="step-circle" style="margin:0 auto 1.25rem;">3</div>
+        <h3 class="font-display font-bold text-white text-lg" style="margin-bottom:0.5rem;">Driver Earns More</h3>
+        <p style="color:#64748b;line-height:1.7;">Driver fills the seat that would have been empty. Earns 28% more per shift. No new skills needed — just follow the app's turn-by-turn guidance.</p>
+      </div>
+
+      <div class="card reveal" style="text-align:center;transition-delay:0.4s;">
+        <div class="step-circle" style="margin:0 auto 1.25rem;">4</div>
+        <h3 class="font-display font-bold text-white text-lg" style="margin-bottom:0.5rem;">Network Grows Smarter</h3>
+        <p style="color:#64748b;line-height:1.7;">Every completed ride feeds the AI with richer demand signal. Routes improve. Availability tightens. Flywheel compounds with scale.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+
+<!-- ═══════════════════════════════════════════════════════
+     MARKET SIZE
+═══════════════════════════════════════════════════════ -->
+<section id="market" style="background-color:var(--bg-800);padding:6rem 0;">
+  <div class="max-w-7xl mx-auto px-6">
+
+    <div class="text-center reveal" style="margin-bottom:3.5rem;">
+      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:9999px;padding:0.3rem 1rem;margin-bottom:1rem;">
+        <span class="text-sm font-semibold text-brand">Market Opportunity</span>
+      </div>
+      <h2 class="font-display text-4xl font-bold text-white" style="font-weight:800;margin-bottom:1rem;">
+        A Massive, Underpenetrated Market
+      </h2>
+      <p style="color:#94a3b8;font-size:1.125rem;max-width:540px;margin:0 auto;">
+        India's urban mobility market is growing faster than any ride-hail platform can address alone.
+      </p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;margin-bottom:3rem;">
+
+      <div class="card reveal" style="text-align:center;transition-delay:0.1s;border-color:rgba(249,115,22,0.25);">
+        <div class="font-display text-4xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.5rem;">$47B</div>
+        <div class="font-semibold text-white" style="margin-bottom:0.35rem;">TAM</div>
+        <div style="color:#64748b;font-size:0.875rem;">Indian urban mobility (2026 est.)</div>
+      </div>
+
+      <div class="card reveal" style="text-align:center;transition-delay:0.2s;border-color:rgba(249,115,22,0.25);">
+        <div class="font-display text-4xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.5rem;">$12B</div>
+        <div class="font-semibold text-white" style="margin-bottom:0.35rem;">SAM</div>
+        <div style="color:#64748b;font-size:0.875rem;">Auto-rickshaw segment, top 20 cities</div>
+      </div>
+
+      <div class="card reveal" style="text-align:center;transition-delay:0.3s;border-color:rgba(249,115,22,0.25);">
+        <div class="font-display text-4xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.5rem;">$850M</div>
+        <div class="font-semibold text-white" style="margin-bottom:0.35rem;">SOM (Year 5)</div>
+        <div style="color:#64748b;font-size:0.875rem;">Reachable with seed + Series A capital</div>
+      </div>
+
+      <div class="card reveal" style="text-align:center;transition-delay:0.4s;border-color:rgba(249,115,22,0.25);">
+        <div class="font-display text-4xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.5rem;">15M</div>
+        <div class="font-semibold text-white" style="margin-bottom:0.35rem;">Potential Drivers</div>
+        <div style="color:#64748b;font-size:0.875rem;">Existing autos, zero capex needed</div>
+      </div>
+
+    </div>
+
+    <!-- Market insight -->
+    <div class="card reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;align-items:center;">
+      <div>
+        <h3 class="font-display font-bold text-white text-xl" style="margin-bottom:0.75rem;font-weight:700;">Why Shared Auto Wins</h3>
+        <p style="color:#64748b;line-height:1.7;font-size:0.9375rem;">
+          Ola/Uber address premium commuters. BEST/Metro address fixed corridors. The 3km gap in between is a $12B void — and the auto-rickshaw is already parked there.
+        </p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.75rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;">
+          <span style="color:#94a3b8;font-size:0.875rem;min-width:100px;">Chalak penetration</span>
+          <div style="flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:9999px;overflow:hidden;">
+            <div style="width:7%;height:100%;background:linear-gradient(to right,#f97316,#ea580c);border-radius:9999px;"></div>
+          </div>
+          <span class="text-brand font-semibold text-sm">7%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;">
+          <span style="color:#94a3b8;font-size:0.875rem;min-width:100px;">Addressable today</span>
+          <div style="flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:9999px;overflow:hidden;">
+            <div style="width:35%;height:100%;background:linear-gradient(to right,#f97316,#ea580c);border-radius:9999px;"></div>
+          </div>
+          <span class="text-brand font-semibold text-sm">35%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;">
+          <span style="color:#94a3b8;font-size:0.875rem;min-width:100px;">5-yr potential</span>
+          <div style="flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:9999px;overflow:hidden;">
+            <div style="width:72%;height:100%;background:linear-gradient(to right,#f97316,#ea580c);border-radius:9999px;"></div>
+          </div>
+          <span class="text-brand font-semibold text-sm">72%</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+
+<!-- ═══════════════════════════════════════════════════════
+     WHY NOW
+═══════════════════════════════════════════════════════ -->
+<section id="whynow" style="background-color:var(--bg-900);padding:6rem 0;">
+  <div class="max-w-7xl mx-auto px-6">
+
+    <div class="text-center reveal" style="margin-bottom:3.5rem;">
+      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:9999px;padding:0.3rem 1rem;margin-bottom:1rem;">
+        <span class="text-sm font-semibold text-brand">Why Now</span>
+      </div>
+      <h2 class="font-display text-4xl font-bold text-white" style="font-weight:800;">
+        Four Tailwinds Converge in 2026
+      </h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;">
+
+      <div class="card reveal" style="transition-delay:0.1s;">
+        <div style="font-size:2rem;margin-bottom:0.75rem;">🚇</div>
+        <h3 class="font-display font-bold text-white" style="margin-bottom:0.5rem;">Metro Expansion</h3>
+        <p style="color:#64748b;font-size:0.9rem;line-height:1.65;">India added 350+ km of metro in 2024–25. Each new station creates a fresh last-mile vacuum Chalak can immediately fill.</p>
+      </div>
+
+      <div class="card reveal" style="transition-delay:0.2s;">
+        <div style="font-size:2rem;margin-bottom:0.75rem;">📶</div>
+        <h3 class="font-display font-bold text-white" style="margin-bottom:0.5rem;">4G/5G Saturation</h3>
+        <p style="color:#64748b;font-size:0.9rem;line-height:1.65;">Entry-level smartphones below ₹6,000 now support our driver app. Supply-side onboarding friction is at an all-time low.</p>
+      </div>
+
+      <div class="card reveal" style="transition-delay:0.3s;">
+        <div style="font-size:2rem;margin-bottom:0.75rem;">🏛️</div>
+        <h3 class="font-display font-bold text-white" style="margin-bottom:0.5rem;">ONDC &amp; Policy Push</h3>
+        <p style="color:#64748b;font-size:0.9rem;line-height:1.65;">India's Open Network for Digital Commerce mandates interoperability. Chalak can plug into ONDC to access millions of new riders instantly.</p>
+      </div>
+
+      <div class="card reveal" style="transition-delay:0.4s;">
+        <div style="font-size:2rem;margin-bottom:0.75rem;">🧠</div>
+        <h3 class="font-display font-bold text-white" style="margin-bottom:0.5rem;">AI Cost Curve</h3>
+        <p style="color:#64748b;font-size:0.9rem;line-height:1.65;">Real-time vehicle routing at scale cost $2M/month in 2019. Today our entire inference stack runs for under $18,000/month.</p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+
+<!-- ═══════════════════════════════════════════════════════
+     BUSINESS MODEL
+═══════════════════════════════════════════════════════ -->
+<section id="business" style="background-color:var(--bg-800);padding:6rem 0;">
+  <div class="max-w-7xl mx-auto px-6">
+
+    <div class="text-center reveal" style="margin-bottom:3.5rem;">
+      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:9999px;padding:0.3rem 1rem;margin-bottom:1rem;">
+        <span class="text-sm font-semibold text-brand">Business Model</span>
+      </div>
+      <h2 class="font-display text-4xl font-bold text-white" style="font-weight:800;margin-bottom:1rem;">
+        Simple. Scalable. Profitable.
+      </h2>
+      <p style="color:#94a3b8;font-size:1.125rem;max-width:520px;margin:0 auto;">
+        Three revenue streams that compound with network density.
+      </p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-bottom:3rem;">
+
+      <div class="card reveal" style="transition-delay:0.1s;">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+          <div style="width:2.5rem;height:2.5rem;background:rgba(249,115,22,0.15);border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">💳</div>
+          <div class="font-display font-bold text-white text-lg" style="font-weight:700;">Commission (Core)</div>
+        </div>
+        <p style="color:#64748b;font-size:0.9rem;line-height:1.65;margin-bottom:1rem;">12% take rate on every shared ride. Lower than Ola/Uber's 20–25% while maintaining positive unit economics through pooling efficiency.</p>
+        <div style="background:rgba(249,115,22,0.08);border-radius:0.5rem;padding:0.6rem 0.9rem;font-size:0.875rem;color:#f97316;font-weight:600;">12% / ride</div>
+      </div>
+
+      <div class="card reveal" style="transition-delay:0.2s;">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+          <div style="width:2.5rem;height:2.5rem;background:rgba(249,115,22,0.15);border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">⭐</div>
+          <div class="font-display font-bold text-white text-lg" style="font-weight:700;">Chalak Prime</div>
+        </div>
+        <p style="color:#64748b;font-size:0.9rem;line-height:1.65;margin-bottom:1rem;">₹99/month subscription for guaranteed pickups within 3 minutes, priority seating, and monthly ride credits. Corporate B2B fleet contracts.</p>
+        <div style="background:rgba(249,115,22,0.08);border-radius:0.5rem;padding:0.6rem 0.9rem;font-size:0.875rem;color:#f97316;font-weight:600;">₹99/mo subscription</div>
+      </div>
+
+      <div class="card reveal" style="transition-delay:0.3s;">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+          <div style="width:2.5rem;height:2.5rem;background:rgba(249,115,22,0.15);border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">📊</div>
+          <div class="font-display font-bold text-white text-lg" style="font-weight:700;">Mobility Data API</div>
+        </div>
+        <p style="color:#64748b;font-size:0.9rem;line-height:1.65;margin-bottom:1rem;">Aggregated, anonymized last-mile demand heatmaps sold to urban planners, real estate developers, and retail chains for site selection.</p>
+        <div style="background:rgba(249,115,22,0.08);border-radius:0.5rem;padding:0.6rem 0.9rem;font-size:0.875rem;color:#f97316;font-weight:600;">₹8L+ / enterprise contract</div>
+      </div>
+
+    </div>
+
+    <!-- Unit economics -->
+    <div class="card reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:2rem;text-align:center;">
+      <div>
+        <div class="font-display text-3xl font-bold gradient-text" style="font-weight:800;">₹4.2</div>
+        <div style="color:#64748b;font-size:0.875rem;margin-top:0.35rem;">Revenue per ride</div>
+      </div>
+      <div>
+        <div class="font-display text-3xl font-bold gradient-text" style="font-weight:800;">₹1.8</div>
+        <div style="color:#64748b;font-size:0.875rem;margin-top:0.35rem;">Cost per ride</div>
+      </div>
+      <div>
+        <div class="font-display text-3xl font-bold gradient-text" style="font-weight:800;">₹2.4</div>
+        <div style="color:#64748b;font-size:0.875rem;margin-top:0.35rem;">Contribution margin</div>
+      </div>
+      <div>
+        <div class="font-display text-3xl font-bold gradient-text" style="font-weight:800;">57%</div>
+        <div style="color:#64748b;font-size:0.875rem;margin-top:0.35rem;">Gross margin (pooled)</div>
+      </div>
+      <div>
+        <div class="font-display text-3xl font-bold gradient-text" style="font-weight:800;">8 mo</div>
+        <div style="color:#64748b;font-size:0.875rem;margin-top:0.35rem;">Payback period</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+
+<!-- ═══════════════════════════════════════════════════════
+     TRACTION
+═══════════════════════════════════════════════════════ -->
+<section id="traction" style="background-color:var(--bg-900);padding:6rem 0;">
+  <div class="max-w-7xl mx-auto px-6">
+
+    <div class="text-center reveal" style="margin-bottom:3.5rem;">
+      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:9999px;padding:0.3rem 1rem;margin-bottom:1rem;">
+        <span class="text-sm font-semibold text-brand">Traction</span>
+      </div>
+      <h2 class="font-display text-4xl font-bold text-white" style="font-weight:800;margin-bottom:1rem;">
+        Numbers That Speak
+      </h2>
+      <p style="color:#94a3b8;font-size:1.125rem;">Live pilots across 3 cities. Real data. No projections.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-bottom:3rem;">
+
+      <div class="card reveal" style="text-align:center;border-color:rgba(249,115,22,0.3);transition-delay:0.05s;">
+        <div class="font-display text-4xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.4rem;">12,000+</div>
+        <div class="font-semibold text-white" style="margin-bottom:0.25rem;">Rides Completed</div>
+        <div style="color:#64748b;font-size:0.8rem;">Across all pilot zones</div>
+      </div>
+
+      <div class="card reveal" style="text-align:center;border-color:rgba(249,115,22,0.3);transition-delay:0.1s;">
+        <div class="font-display text-4xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.4rem;">850+</div>
+        <div class="font-semibold text-white" style="margin-bottom:0.25rem;">Active Drivers</div>
+        <div style="color:#64748b;font-size:0.8rem;">Organic referral &gt; 60%</div>
+      </div>
+
+      <div class="card reveal" style="text-align:center;border-color:rgba(249,115,22,0.3);transition-delay:0.15s;">
+        <div class="font-display text-4xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.4rem;">4.7 ★</div>
+        <div class="font-semibold text-white" style="margin-bottom:0.25rem;">Avg. Rider Rating</div>
+        <div style="color:#64748b;font-size:0.8rem;">Industry avg. is 4.1</div>
+      </div>
+
+      <div class="card reveal" style="text-align:center;border-color:rgba(249,115,22,0.3);transition-delay:0.2s;">
+        <div class="font-display text-4xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.4rem;">68%</div>
+        <div class="font-semibold text-white" style="margin-bottom:0.25rem;">30-Day Retention</div>
+        <div style="color:#64748b;font-size:0.8rem;">Uber India: ~38%</div>
+      </div>
+
+      <div class="card reveal" style="text-align:center;border-color:rgba(249,115,22,0.3);transition-delay:0.25s;">
+        <div class="font-display text-4xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.4rem;">3</div>
+        <div class="font-semibold text-white" style="margin-bottom:0.25rem;">Cities Live</div>
+        <div style="color:#64748b;font-size:0.8rem;">BLR · DEL · MUM</div>
+      </div>
+
+      <div class="card reveal" style="text-align:center;border-color:rgba(249,115,22,0.3);transition-delay:0.3s;">
+        <div class="font-display text-4xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.4rem;">91%</div>
+        <div class="font-semibold text-white" style="margin-bottom:0.25rem;">On-Time Arrival</div>
+        <div style="color:#64748b;font-size:0.8rem;">Within ±2 min of ETA</div>
+      </div>
+
+    </div>
+
+    <!-- MoM growth callout -->
+    <div class="card reveal" style="background:linear-gradient(135deg,rgba(249,115,22,0.08),rgba(234,88,12,0.04));border-color:rgba(249,115,22,0.25);text-align:center;padding:2.5rem;">
+      <div class="font-display text-5xl font-bold gradient-text" style="font-weight:800;margin-bottom:0.5rem;">23% MoM</div>
+      <div style="color:#94a3b8;font-size:1.125rem;margin-bottom:0.5rem;">Ride volume growth over the last 4 months</div>
+      <div style="color:#64748b;font-size:0.875rem;">Achieved with zero paid marketing spend</div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+
+<!-- ═══════════════════════════════════════════════════════
+     TEAM
+═══════════════════════════════════════════════════════ -->
+<section id="team" style="background-color:var(--bg-800);padding:6rem 0;">
+  <div class="max-w-7xl mx-auto px-6">
+
+    <div class="text-center reveal" style="margin-bottom:3.5rem;">
+      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:9999px;padding:0.3rem 1rem;margin-bottom:1rem;">
+        <span class="text-sm font-semibold text-brand">The Team</span>
+      </div>
+      <h2 class="font-display text-4xl font-bold text-white" style="font-weight:800;margin-bottom:1rem;">
+        Built by People Who Know This Problem
+      </h2>
+      <p style="color:#94a3b8;font-size:1.125rem;max-width:520px;margin:0 auto;">
+        Three Indian co-founders with the exact pedigree to build the infrastructure layer India's mobility sector needs.
+      </p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;max-width:900px;margin:0 auto;">
+
+      <div class="card reveal" style="text-align:center;transition-delay:0.1s;">
+        <div class="team-avatar">🚀</div>
+        <h3 class="font-display font-bold text-white text-xl" style="margin-bottom:0.25rem;font-weight:700;">Arjun Mehta</h3>
+        <div class="text-brand font-semibold text-sm" style="margin-bottom:0.75rem;">CEO &amp; Co-Founder</div>
+        <p style="color:#64748b;font-size:0.875rem;line-height:1.65;">Former Head of Supply Growth at Ola (2017–2023). Scaled driver network from 400K to 2.1M. IIT Bombay CS, ISB MBA.</p>
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-wrap:wrap;gap:0.4rem;justify-content:center;">
+          <span style="background:rgba(249,115,22,0.1);border-radius:9999px;padding:0.15rem 0.65rem;font-size:0.75rem;color:#f97316;">Ex-Ola</span>
+          <span style="background:rgba(249,115,22,0.1);border-radius:9999px;padding:0.15rem 0.65rem;font-size:0.75rem;color:#f97316;">IIT Bombay</span>
+          <span style="background:rgba(249,115,22,0.1);border-radius:9999px;padding:0.15rem 0.65rem;font-size:0.75rem;color:#f97316;">ISB</span>
+        </div>
+      </div>
+
+      <div class="card reveal" style="text-align:center;transition-delay:0.2s;">
+        <div class="team-avatar">🗺️</div>
+        <h3 class="font-display font-bold text-white text-xl" style="margin-bottom:0.25rem;font-weight:700;">Priya Nair</h3>
+        <div class="text-brand font-semibold text-sm" style="margin-bottom:0.75rem;">CTO &amp; Co-Founder</div>
+        <p style="color:#64748b;font-size:0.875rem;line-height:1.65;">5 years on Google Maps routing infrastructure (India &amp; SEA). Built the real-time ETA engine for 80M daily active users. IIT Madras.</p>
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-wrap:wrap;gap:0.4rem;justify-content:center;">
+          <span style="background:rgba(249,115,22,0.1);border-radius:9999px;padding:0.15rem 0.65rem;font-size:0.75rem;color:#f97316;">Ex-Google Maps</span>
+          <span style="background:rgba(249,115,22,0.1);border-radius:9999px;padding:0.15rem 0.65rem;font-size:0.75rem;color:#f97316;">IIT Madras</span>
+        </div>
+      </div>
+
+      <div class="card reveal" style="text-align:center;transition-delay:0.3s;">
+        <div class="team-avatar">🏛️</div>
+        <h3 class="font-display font-bold text-white text-xl" style="margin-bottom:0.25rem;font-weight:700;">Vikram Rao</h3>
+        <div class="text-brand font-semibold text-sm" style="margin-bottom:0.75rem;">COO &amp; Co-Founder</div>
+        <p style="color:#64748b;font-size:0.875rem;line-height:1.65;">Former transport policy advisor, Ministry of Housing &amp; Urban Affairs (2019–2024). Designed FAME-II EV incentive framework. XLRI, IIM-A.</p>
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-wrap:wrap;gap:0.4rem;justify-content:center;">
+          <span style="background:rgba(249,115,22,0.1);border-radius:9999px;padding:0.15rem 0.65rem;font-size:0.75rem;color:#f97316;">Ex-MoHUA</span>
+          <span style="background:rgba(249,115,22,0.1);border-radius:9999px;padding:0.15rem 0.65rem;font-size:0.75rem;color:#f97316;">XLRI</span>
+          <span style="background:rgba(249,115,22,0.1);border-radius:9999px;padding:0.15rem 0.65rem;font-size:0.75rem;color:#f97316;">IIM-A</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+
+<!-- ═══════════════════════════════════════════════════════
+     CTA
+═══════════════════════════════════════════════════════ -->
+<section id="cta" style="background-color:var(--bg-900);padding:7rem 0;position:relative;overflow:hidden;">
+  <!-- Background glow -->
+  <div class="glow-ring" style="width:700px;height:700px;background:rgba(249,115,22,0.07);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+
+  <div class="max-w-3xl mx-auto px-6 text-center reveal" style="position:relative;z-index:1;">
+    <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:9999px;padding:0.3rem 1rem;margin-bottom:1.5rem;">
+      <span class="text-sm font-semibold text-brand">Seed Round Open · $2.5M</span>
+    </div>
+
+    <h2 class="font-display font-bold text-white" style="font-size:clamp(2rem,4.5vw,3.25rem);font-weight:800;line-height:1.2;margin-bottom:1.25rem;">
+      Be Part of India's<br/>
+      <span class="gradient-text">Last-Mile Revolution</span>
+    </h2>
+
+    <p style="color:#94a3b8;font-size:1.125rem;line-height:1.75;margin-bottom:2.5rem;max-width:520px;margin-left:auto;margin-right:auto;margin-bottom:2.5rem;">
+      We're raising $2.5M to expand to 10 cities, reach 100K weekly rides, and build the routing AI that every city in the Global South will eventually use.
+    </p>
+
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:3rem;">
+      <a href="mailto:invest@chalak.in" class="btn-primary" style="font-size:1rem;">
+        Request Investor Deck →
+      </a>
+      <a href="mailto:hello@chalak.in" class="btn-outline" style="font-size:1rem;">
+        Schedule a Call
+      </a>
+    </div>
+
+    <!-- Trust signals -->
+    <div style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span style="color:#22c55e;">✓</span>
+        <span style="color:#64748b;font-size:0.875rem;">DPIIT Recognized Startup</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span style="color:#22c55e;">✓</span>
+        <span style="color:#64748b;font-size:0.875rem;">T-Hub Cohort 12</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span style="color:#22c55e;">✓</span>
+        <span style="color:#64748b;font-size:0.875rem;">Preferred by 3 State Govts</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════ -->
+<footer style="background-color:var(--bg-800);border-top:1px solid rgba(249,115,22,0.1);padding:3rem 0;">
+  <div class="max-w-7xl mx-auto px-6">
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2.5rem;margin-bottom:3rem;">
+
+      <!-- Brand -->
+      <div>
+        <div class="font-display font-bold text-xl text-white flex items-center gap-2" style="font-weight:800;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;">
+          <span style="width:26px;height:26px;background:linear-gradient(135deg,#fb923c,#ea580c);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;">⚡</span>
+          Chalak
+        </div>
+        <p style="color:#64748b;font-size:0.875rem;line-height:1.65;max-width:220px;">
+          AI-optimized shared auto-rickshaw transit. India's last-mile, finally solved.
+        </p>
+      </div>
+
+      <!-- Product -->
+      <div>
+        <div class="font-semibold text-white" style="margin-bottom:0.75rem;font-size:0.875rem;text-transform:uppercase;letter-spacing:0.05em;color:#94a3b8;">Product</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">
+          <li><a href="#solution" style="color:#64748b;text-decoration:none;font-size:0.875rem;transition:color 0.2s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#64748b'">How It Works</a></li>
+          <li><a href="#market" style="color:#64748b;text-decoration:none;font-size:0.875rem;transition:color 0.2s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#64748b'">Market Opportunity</a></li>
+          <li><a href="#traction" style="color:#64748b;text-decoration:none;font-size:0.875rem;transition:color 0.2s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#64748b'">Traction</a></li>
+        </ul>
+      </div>
+
+      <!-- Company -->
+      <div>
+        <div class="font-semibold" style="margin-bottom:0.75rem;font-size:0.875rem;text-transform:uppercase;letter-spacing:0.05em;color:#94a3b8;">Company</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">
+          <li><a href="#team" style="color:#64748b;text-decoration:none;font-size:0.875rem;transition:color 0.2s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#64748b'">Team</a></li>
+          <li><a href="mailto:invest@chalak.in" style="color:#64748b;text-decoration:none;font-size:0.875rem;transition:color 0.2s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#64748b'">Investor Relations</a></li>
+          <li><a href="mailto:hello@chalak.in" style="color:#64748b;text-decoration:none;font-size:0.875rem;transition:color 0.2s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#64748b'">Contact</a></li>
+        </ul>
+      </div>
+
+      <!-- Cities -->
+      <div>
+        <div class="font-semibold" style="margin-bottom:0.75rem;font-size:0.875rem;text-transform:uppercase;letter-spacing:0.05em;color:#94a3b8;">Pilot Cities</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">
+          <li style="color:#64748b;font-size:0.875rem;">🏙️ Bangalore</li>
+          <li style="color:#64748b;font-size:0.875rem;">🏙️ Delhi NCR</li>
+          <li style="color:#64748b;font-size:0.875rem;">🏙️ Mumbai</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Bottom bar -->
+    <div style="padding-top:2rem;border-top:1px solid rgba(255,255,255,0.05);display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:center;">
+      <div style="color:#475569;font-size:0.8125rem;">
+        © 2026 Chalak Technologies Pvt. Ltd. All rights reserved.
+      </div>
+      <div style="display:flex;gap:1.5rem;">
+        <a href="#" style="color:#475569;font-size:0.8125rem;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#475569'">Privacy Policy</a>
+        <a href="#" style="color:#475569;font-size:0.8125rem;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#475569'">Terms of Service</a>
+      </div>
+    </div>
+
+  </div>
+</footer>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT — Intersection Observer scroll reveals
+═══════════════════════════════════════════════════════ -->
+<script>
+  (function () {
+    'use strict';
+
+    var observerOptions = {
+      threshold: 0.12,
+      rootMargin: '0px 0px -40px 0px'
+    };
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          // Unobserve after reveal so it stays visible
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    // Observe all animated elements
+    var selectors = ['.reveal', '.reveal-left', '.reveal-right'];
+    selectors.forEach(function (sel) {
+      document.querySelectorAll(sel).forEach(function (el) {
+        observer.observe(el);
+      });
+    });
+
+    // Smooth active nav link highlight
+    var sections = document.querySelectorAll('section[id]');
+    var navLinks = document.querySelectorAll('nav a[href^="#"]');
+
+    var sectionObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var id = entry.target.getAttribute('id');
+          navLinks.forEach(function (link) {
+            var href = link.getAttribute('href');
+            if (href === '#' + id) {
+              link.style.color = '#f97316';
+            } else {
+              link.style.color = '#94a3b8';
+            }
+          });
+        }
+      });
+    }, { threshold: 0.4 });
+
+    sections.forEach(function (sec) { sectionObserver.observe(sec); });
+  })();
+</script>
+
+</body>
+</html>
